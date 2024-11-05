@@ -57,13 +57,7 @@ export class ThreeService {
   animate(): void {
     this.ngZone.runOutsideAngular(() => {
       this.animationFrameId = requestAnimationFrame(() => this.animate());
-      const currentTime = Date.now();
-      if (currentTime - this.lastTime >= this.delay) {
-        console.log('Queue Length:', this.queueSimulationService.queue.length);
-        this.queueSimulationService.simulateStep(this.delay);
-        this.updateVisualization();
-        this.lastTime = currentTime;
-      }
+      this.updateVisualization();
       this.updateCustomerPositions();
       this.controls.update();
       this.renderer.render(this.scene, this.camera);
@@ -93,7 +87,7 @@ export class ThreeService {
     this.scene.add(floor);
 
     // Add server objects
-    const numServers = this.queueSimulationService.getNumServers();
+    const numServers = this.queueSimulationService.S;
     for (let i = 0; i < numServers; i++) {
       const geometry = new THREE.BoxGeometry(1, 2, 1);
       const material = new THREE.MeshBasicMaterial({ color: 0x0000ff });
@@ -133,10 +127,9 @@ export class ThreeService {
     this.customers.forEach((customer) => {
       if (customer.state === 'waiting') {
         const elevatorIndex =
-          this.customers.indexOf(customer) %
-          this.queueSimulationService.getNumServers();
+          this.customers.indexOf(customer) % this.queueSimulationService.S;
         customer.targetPosition.set(
-          elevatorIndex * 2 - this.queueSimulationService.getNumServers(),
+          elevatorIndex * 2 - this.queueSimulationService.S,
           2,
           0,
         );
