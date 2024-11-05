@@ -1,59 +1,168 @@
-<div #canvasContainer class="w-full h-screen"></div>
+<div #canvasContainer class="w-dvw h-dvh"></div>
 
-<button (click)="toggleControlPanel()" class="absolute top-5 right-5 p-2 bg-blue-600 text-white rounded">
-  {{ isControlPanelVisible ? 'Hide' : 'Show' }} Control Panel
-</button>
+<app-queue-chart [chartName]="'Queue'" [data]="queueSimulationService.queueChartData" class="absolute bottom-0 right-0 z-50" />
 
-@if(isControlPanelVisible){
-  <form class="absolute top-5 left-5 p-4 flex flex-col bg-blue-800 bg-opacity-75 gap-2 rounded-lg shadow-lg text-white">
-    <label class="flex justify-between items-center">
-      Lambda:
-      <div>
-        <input type="number" [(ngModel)]="queueSimulationService.lambda" name="lambda" required class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        (λ)
-      </div>
+<!-- Simulation Panel -->
+<div
+  [ngClass]="
+    isSimulationPanelVisible ? 'simulation-panel-show' : 'simulation-panel-hide'
+  "
+  class="fixed flex top-0 left-0 text-white z-20"
+>
+  <div class="w-64 bg-blue-800 bg-opacity-75 p-4 shadow-lg">
+    <!-- Simulation panel content -->
+    <label class="flex flex-col">
+      Hour Simulate:
+      <input
+        type="range"
+        (ngModelChange)="onSimulationParamsChange()"
+        [(ngModel)]="queueSimulationService.hoursSimulate"
+        min="0"
+        max="5"
+        step="1"
+        class="mt-2 appearance-none w-full h-2 bg-gray-700 rounded-lg cursor-pointer"
+      />
+      <span class="mt-1 text-center"
+        >{{ queueSimulationService.hoursSimulate }} Hours</span
+      >
     </label>
-    <label class="flex justify-between items-center">
-      Mu:
-      <div>
-        <input type="number" [(ngModel)]="queueSimulationService.mu" name="mu" required class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        (μ)
-      </div>
+
+    <label class="flex flex-col">
+      Duration Seconds:
+      <input
+        type="range"
+        (ngModelChange)="onSimulationParamsChange()"
+        [(ngModel)]="queueSimulationService.durationSeconds"
+        min="0"
+        max="30"
+        step="1"
+        class="mt-2 appearance-none w-full h-2 bg-gray-700 rounded-lg cursor-pointer"
+      />
+      <span class="mt-1 text-center"
+        >{{ queueSimulationService.durationSeconds }} Seconds</span
+      >
     </label>
-    <label class="flex justify-between items-center">
-      Number of Servers:
-      <div>
-        <input type="number" [(ngModel)]="queueSimulationService.S" name="numServers" required class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        (S)
-      </div>
-    </label>
-    <label class="flex justify-between items-center">
-      Max Queue Length:
-      <div>
-        <input type="number" [(ngModel)]="queueSimulationService.K" name="maxQueueLength" required class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        (K)
-      </div>
-    </label>
-    <label class="flex justify-between items-center">
-      Delay:
-      <div>
-        <input type="number" [(ngModel)]="threeService.delay" name="delay" required class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        ms
-      </div>
-    </label>
+    @if (queueSimulationService.simulationStopped) {
+      <button
+        (click)="startSimulation()"
+        class="mt-2 p-2 bg-green-600 text-white rounded w-full"
+      >
+        Start Simulation
+      </button>
+    } @else {
+      <button
+        (click)="stopSimulation()"
+        class="mt-2 p-2 bg-red-600 text-white rounded w-full"
+      >
+        Stop Simulation
+      </button>
+    }
+  </div>
+  <button
+    (click)="toggleSimulationPanel()"
+    class="bg-blue-600 text-white z-20 w-10 h-auto h-52 py-3 rounded-r-xl"
+  >
+    <p class="rotate-90 text-nowrap -mx-20">
+      {{ isSimulationPanelVisible ? 'Hide' : 'Show' }} Simulation Panel
+    </p>
+  </button>
+</div>
+
+<!-- Control Panel -->
+<div
+  [ngClass]="
+    isControlPanelVisible ? 'control-panel-show' : 'control-panel-hide'
+  "
+  class="fixed flex bottom-0 left-0 text-white z-20"
+>
+  <div class="flex gap-5 bg-blue-800 bg-opacity-75 p-4 shadow-lg">
+    <form class="flex p-2 mt-4 flex-col gap-2">
+      <label class="flex justify-between items-center">
+        Lambda:
+        <div>
+          <input
+            type="number"
+            [(ngModel)]="queueSimulationService.lambda"
+            name="lambda"
+            required
+            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          (λ)
+        </div>
+      </label>
+      <label class="flex justify-between items-center">
+        Mu:
+        <div>
+          <input
+            type="number"
+            [(ngModel)]="queueSimulationService.mu"
+            name="mu"
+            required
+            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          (μ)
+        </div>
+      </label>
+      <label class="flex justify-between items-center">
+        Number of Servers:
+        <div>
+          <input
+            type="number"
+            [(ngModel)]="queueSimulationService.S"
+            name="numServers"
+            required
+            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          (S)
+        </div>
+      </label>
+      <label class="flex justify-between items-center">
+        Max Queue Length:
+        <div>
+          <input
+            type="number"
+            [(ngModel)]="queueSimulationService.K"
+            name="maxQueueLength"
+            required
+            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          (K)
+        </div>
+      </label>
+      <label class="flex justify-between items-center">
+        Delay:
+        <div>
+          <input
+            type="number"
+            [(ngModel)]="threeService.delay"
+            name="delay"
+            required
+            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          ms
+        </div>
+      </label>
+      <p class="text-wrap text-red-300">
+        You need to restart the simulation to <br> make the changes take effect.
+      </p>
+    </form>
     <div class="mt-4 p-2 bg-gray-700 rounded">
       <h3 class="text-lg font-bold">Current Parameters</h3>
-      <h3 class="text-lg font-bold">System
-        @if(queueSimulationService.S === 1 && queueSimulationService.K === 0){
+      <h3 class="text-lg font-bold">
+        System
+        @if (queueSimulationService.S === 1 && queueSimulationService.K === 0) {
           M/M/1
-        }
-        @else if(queueSimulationService.S === 1 && queueSimulationService.K > 0){
+        } @else if (
+          queueSimulationService.S === 1 && queueSimulationService.K > 0
+        ) {
           M/M/1/K
-        }
-        @else if(queueSimulationService.S > 1 && queueSimulationService.K === 0){
+        } @else if (
+          queueSimulationService.S > 1 && queueSimulationService.K === 0
+        ) {
           M/M/S
-        }
-        @else if(queueSimulationService.S > 1 && queueSimulationService.K > 0){
+        } @else if (
+          queueSimulationService.S > 1 && queueSimulationService.K > 0
+        ) {
           M/M/S/K
         }
       </h3>
@@ -61,18 +170,40 @@
       <p>Mu (μ): {{ queueSimulationService.mu }}</p>
       <p>Number of Servers (S): {{ queueSimulationService.S }}</p>
       <p>Max Queue Length (K): {{ queueSimulationService.K }}</p>
-      @if(queueSimulationService.systemUtilization < 1){
-        <p class="text-green-400 font-bold">System Utilization: {{ queueSimulationService.systemUtilization * 100 }}%</p>
-        <p>L: {{ queueSimulationService.L }}</p>
-        <p>Lq: {{ queueSimulationService.Lq }}</p>
-        <p>W: {{ queueSimulationService.W }}</p>
-        <p>Wq: {{ queueSimulationService.Wq }}</p>
-      }
-      @else {
-        <p class="text-red-400 font-bold">The system is OVERLOADED by: {{queueSimulationService.systemUtilization * 100}}%</p>
+      @if (queueSimulationService.systemUtilization < 1) {
+        <p class="text-green-400 font-bold">
+          System Utilization:
+          {{ queueSimulationService.systemUtilization * 100 }}%
+        </p>
+      } @else {
+        <p class="text-red-400 font-bold">
+          The system is OVERLOADED by:
+          {{ queueSimulationService.systemUtilization * 100 }}%
+        </p>
       }
 
-      <button (click)="queueSimulationService.simulateStep(threeService.delay)" class="mt-2 p-2 bg-blue-600 text-white rounded">Calculate Simulation</button>
+      <p>L: {{ queueSimulationService.L }} Clientes</p>
+      <p>Lq: {{ queueSimulationService.Lq }} Clientes</p>
+      <p>
+        W: {{ queueSimulationService.W }} Horas ≈
+        {{ queueSimulationService.W | hourToMinute }} Minutos ≈
+        {{ queueSimulationService.W | hourToSecond }} Segundos
+      </p>
+      <p>
+        Wq: {{ queueSimulationService.Wq }} Horas ≈
+        {{ queueSimulationService.Wq | hourToMinute }} Minutos ≈
+        {{ queueSimulationService.Wq | hourToSecond }} Segundos
+      </p>
     </div>
-  </form>
-}
+  </div>
+  <!-- Control panel content -->
+  <button
+    (click)="toggleControlPanel()"
+    class="bg-blue-600 text-white z-20 w-10 h-auto h-52 py-3 rounded-r-xl"
+  >
+    <p class="rotate-90 text-nowrap -mx-20">
+      {{ isControlPanelVisible ? 'Hide' : 'Show' }} Control Panel
+    </p>
+  </button>
+</div>
+

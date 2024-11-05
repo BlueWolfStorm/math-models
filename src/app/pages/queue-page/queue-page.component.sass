@@ -1,0 +1,20 @@
+// Mixins
+@mixin transition($property, $duration, $timing)
+  transition: $property $duration $timing
+
+// Panel styles
+.control-panel-show
+  transform: translateX(0%)
+  @include transition(transform, 0.3s, ease-in-out)
+
+.control-panel-hide
+  transform: translateX(-95%)
+  @include transition(transform, 0.3s, ease-in-out)
+
+.simulation-panel-show
+  transform: translateX(0%)
+  @include transition(transform, 0.3s, ease-in-out)
+
+.simulation-panel-hide
+  transform: translateX(-88%)
+  @include transition(transform, 0.3s, ease-in-out)
