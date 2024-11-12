@@ -19,6 +19,7 @@ export class QueueSimulationService {
   // Simulation parameters
   queue: Customer[] = [];
   service: Service[] = [];
+  endWhenServerQueueIsEmpty = false
   startSimulationTime = new Date();
   serviceEndTimes: number[] = [];
   customerProbability = 0;
@@ -29,6 +30,8 @@ export class QueueSimulationService {
 
   // Chart parameters
   queueChartData: LineData[] = [];
+  serviceChartData: LineData[] = [];
+
 
   // Queue parameters
   K = 0; // K
@@ -61,6 +64,7 @@ export class QueueSimulationService {
     this.hoursSimulate = hoursSimulate;
     this.durationSeconds = durationSeconds;
     this.queueChartData = [];
+    this.serviceChartData = [];
     console.log('');
     console.log('');
     console.log('Initializing Values...');
@@ -82,11 +86,15 @@ export class QueueSimulationService {
     this.printValues();
 
     for (let i = 0; i < this.S; i++) {
+      let queueLength = this.K;
+      if(this.K == 0)
+        queueLength = 1
+
       this.service.push({
         enabled: true,
         queue: [],
-        K: this.K,
-        endWhenQueueIsEmpty: false,
+        K: queueLength,
+        endWhenQueueIsEmpty: this.endWhenServerQueueIsEmpty,
       });
     }
 
@@ -120,31 +128,47 @@ export class QueueSimulationService {
   }
 
   private simulateStep(): void {
-    this.arriveCustomer();
-    if (this.queue.length != 0) this.insertCustomersInServiceQueue();
     this.updateServiceTimes();
+    this.arriveCustomer();
+    if (this.queue.length != 0){
+      if(!this.endWhenServerQueueIsEmpty)
+        this.insertCustomersInServiceQueue()
+      else
+        this.insertCustomersInServiceEmptyQueue()
+    }
   }
 
   private arriveCustomer(): void {
     let currentCustomerProbability = this.customerProbability;
+    let clientsArrived = 0;
     while (currentCustomerProbability > 0) {
       if (Math.random() * 100 < currentCustomerProbability) {
         const customer: Customer = {
           serviceTime: this.oneOverMu * 60,
         };
         this.queue.push(customer);
-        console.log('   Llegó un cliente');
+        clientsArrived++;
       }
       currentCustomerProbability -= 100;
     }
+    if(clientsArrived > 0)
+      console.log(`   Entro ${clientsArrived} clientes`);
 
     const totalQueue =
-      this.queue.length +
-      this.service.reduce((acc, server) => acc + server.queue.length, 0);
+      this.queue.length;
 
     this.queueChartData.push({
       time: (this.startSimulationTime.getTime() / 1000) as UTCTimestamp,
       value: totalQueue,
+    });
+
+    let serviceQueue = 0;
+    for(let i = 0; i < this.S; i++){
+      serviceQueue += this.service[i].queue.length;
+    }
+    this.serviceChartData.push({
+      time: (this.startSimulationTime.getTime() / 1000) as UTCTimestamp,
+      value: serviceQueue,
     });
 
     this.startSimulationTime = new Date(
@@ -176,9 +200,30 @@ export class QueueSimulationService {
 
     // Insert first customer in queue
     this.service[serverWithLessCustomers].queue.push(this.queue.shift()!);
-    console.log('     Cliente en cola de servidor', serverWithLessCustomers);
+    console.log('     Cliente entro en el servidor:', serverWithLessCustomers);
 
     this.insertCustomersInServiceQueue();
+  }
+
+  private insertCustomersInServiceEmptyQueue(): void {
+    // Find servers with empty queue
+    let emptyServers: number[] = [];
+
+    emptyServers = this.service
+      .map((server, index) => (server.queue.length === 0 ? index : -1))
+      .filter((index) => index !== -1);
+
+    if (emptyServers.length === 0 || this.queue.length === 0) return;
+
+    let numberOfCustomers = 0;
+    // Insert K customers in empty server
+    for (let i = 0; i < this.service[emptyServers[0]].K; i++) {
+      if (this.queue.length <= 0) break;
+      this.service[emptyServers[0]].queue.push(this.queue.shift()!)
+      numberOfCustomers++;
+    }
+
+    console.log(`     Entraron ${numberOfCustomers} clientes en el servidor `, emptyServers[0]);
   }
 
   private updateServiceTimes(): void {
@@ -187,7 +232,7 @@ export class QueueSimulationService {
     for (let i = 0; i < this.S; i++) {
       // Update service times and remove customers whose service time has reached 0
       for (let j = 0; j < this.service[i].queue.length; j++) {
-        this.service[i].queue[j].serviceTime--;
+        this.service[i].queue[j].serviceTime -= 1;
         if (this.service[i].queue[j].serviceTime <= 0) {
           this.service[i].queue.splice(j, 1);
           console.log('       Cliente atendido en servidor', i);
@@ -213,8 +258,8 @@ export class QueueSimulationService {
     this.systemUtilization = this.lambda / (this.S * this.mu);
     this.systemNonUtilization = this.getMMSSystemNonUtilization();
     this.Lq =
-      (this.rho ** (this.S + 1) / this.factorial(this.S - 1)) *
-      (1 / (this.S - this.rho) ** 2) *
+      ((this.rho ** (this.S + 1))  / this.factorial(this.S - 1)) *
+      (1 / ((this.S - this.rho) ** 2)) *
       this.systemNonUtilization;
     this.Wq = this.Lq / this.lambda;
     this.W = this.Wq + this.oneOverMu;
@@ -223,14 +268,14 @@ export class QueueSimulationService {
 
   private getMMSSystemNonUtilization(): number {
     let sum = 0;
-    for (let i = 0; i < this.S - 1; i++) {
+    for (let i = 0; i <= this.S - 1; i++) {
       sum += this.rho ** i / this.factorial(i);
     }
 
     return (
       1 /
       (sum +
-        (this.rho ** this.S / this.factorial(this.S)) *
+        ((this.rho ** this.S) / this.factorial(this.S)) *
           (this.S / (this.S - this.rho)))
     );
   }
@@ -266,14 +311,14 @@ export class QueueSimulationService {
   }
 
   private roundValues() {
-    this.rho = Math.round(this.rho * 100) / 100;
-    this.systemUtilization = Math.round(this.systemUtilization * 100) / 100;
-    this.systemNonUtilization =
-      Math.round(this.systemNonUtilization * 100) / 100;
+    this.rho = Math.round(this.rho * 10000) / 10000;
+    this.systemUtilization = Math.round(this.systemUtilization * 10000) / 10000;
+    this.systemNonUtilization = Math.round(this.systemNonUtilization * 10000) / 10000;
     this.Lq = Math.round(this.Lq);
     this.L = Math.round(this.L);
-    this.Wq = Math.round(this.Wq * 100) / 100;
-    this.W = Math.round(this.W * 100) / 100;
+    this.oneOverMu = Math.round(this.oneOverMu * 10000) / 10000;
+    this.Wq = Math.round(this.Wq * 10000) / 10000;
+    this.W = Math.round(this.W * 10000) / 10000;
   }
 
   private printValues(): void {

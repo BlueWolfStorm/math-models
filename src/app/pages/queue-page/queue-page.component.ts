@@ -58,6 +58,15 @@ export class QueuePageComponent implements OnInit, OnDestroy {
     this.queueSimulationService.calculateDelay();
   }
 
+  onModelParamsChange(): void {
+    if(this.queueSimulationService.simulationStopped) return
+
+    this.stopSimulation();
+    setTimeout(() => {
+      this.startSimulation();
+    }, 300);
+  }
+
   startSimulation(): void {
     this.queueSimulationService.startSimulation(
       this.queueSimulationService.hoursSimulate,

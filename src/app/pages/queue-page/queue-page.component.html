@@ -1,6 +1,9 @@
 <div #canvasContainer class="w-dvw h-dvh"></div>
 
-<app-queue-chart [chartName]="'Queue'" [data]="queueSimulationService.queueChartData" class="absolute bottom-0 right-0 z-50" />
+<app-queue-chart [width]="700" [height]="250" [chartName]="'Service Queue'" [data]="queueSimulationService.serviceChartData"
+                 class="absolute top-0 right-0 z-20" />
+<app-queue-chart [width]="700" [height]="250" [chartName]="'General Queue'" [data]="queueSimulationService.queueChartData"
+                 class="absolute bottom-0 right-0 z-20" />
 
 <!-- Simulation Panel -->
 <div
@@ -34,7 +37,7 @@
         (ngModelChange)="onSimulationParamsChange()"
         [(ngModel)]="queueSimulationService.durationSeconds"
         min="0"
-        max="30"
+        max="60"
         step="1"
         class="mt-2 appearance-none w-full h-2 bg-gray-700 rounded-lg cursor-pointer"
       />
@@ -82,6 +85,7 @@
         <div>
           <input
             type="number"
+            (ngModelChange)="onModelParamsChange()"
             [(ngModel)]="queueSimulationService.lambda"
             name="lambda"
             required
@@ -95,6 +99,7 @@
         <div>
           <input
             type="number"
+            (ngModelChange)="onModelParamsChange()"
             [(ngModel)]="queueSimulationService.mu"
             name="mu"
             required
@@ -104,10 +109,38 @@
         </div>
       </label>
       <label class="flex justify-between items-center">
+        Service Time:
+        <div>
+          <input
+            type="number"
+            (ngModelChange)="onModelParamsChange()"
+            [(ngModel)]="queueSimulationService.oneOverMu"
+            name="oneOverMu"
+            required
+            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          (h)
+        </div>
+      </label>
+      <label class="flex justify-between items-center">
+        AutoCalculate Mu:
+        <div>
+          <input
+            type="checkbox"
+            (ngModelChange)="onModelParamsChange()"
+            [(ngModel)]="queueSimulationService.calculateOneOverMu"
+            name="calculateOneOverMu"
+            required
+            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </label>
+      <label class="flex justify-between items-center">
         Number of Servers:
         <div>
           <input
             type="number"
+            (ngModelChange)="onModelParamsChange()"
             [(ngModel)]="queueSimulationService.S"
             name="numServers"
             required
@@ -117,10 +150,24 @@
         </div>
       </label>
       <label class="flex justify-between items-center">
+        End When Server Queue is Empty:
+        <div>
+          <input
+            type="checkbox"
+            (ngModelChange)="onModelParamsChange()"
+            [(ngModel)]="queueSimulationService.endWhenServerQueueIsEmpty"
+            name="calculateOneOverMu"
+            required
+            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+      </label>
+      <label class="flex justify-between items-center">
         Max Queue Length:
         <div>
           <input
             type="number"
+            (ngModelChange)="onModelParamsChange()"
             [(ngModel)]="queueSimulationService.K"
             name="maxQueueLength"
             required
@@ -129,21 +176,8 @@
           (K)
         </div>
       </label>
-      <label class="flex justify-between items-center">
-        Delay:
-        <div>
-          <input
-            type="number"
-            [(ngModel)]="threeService.delay"
-            name="delay"
-            required
-            class="w-32 ml-2 p-1 rounded bg-gray-700 border border-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          />
-          ms
-        </div>
-      </label>
       <p class="text-wrap text-red-300">
-        You need to restart the simulation to <br> make the changes take effect.
+        You may need to restart the simulation to <br> make the changes take effect.
       </p>
     </form>
     <div class="mt-4 p-2 bg-gray-700 rounded">

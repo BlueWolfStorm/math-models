@@ -30,8 +30,8 @@ export class QueueChartComponent implements OnInit, AfterViewChecked {
   private toolTip!: HTMLDivElement;
   chartName = input.required<string>();
   data = input.required<LineData[]>();
-  width = input<number>(300);
-  height = input<number>(300);
+  width = input<number>(700);
+  height = input<number>(380);
 
   constructor(public queueSimulationService: QueueSimulationService) {}
 
