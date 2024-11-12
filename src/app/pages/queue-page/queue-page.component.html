@@ -15,9 +15,9 @@
     </p>
   </button>
   <div class="flex flex-col">
-    <p class="bg-blue-600 text-white text-center" >General Queue</p>
-    <app-queue-chart [width]="700" [height]="300" [chartName]="'Service Queue'" [data]="queueSimulationService.serviceChartData"/>
     <p class="bg-blue-600 text-white text-center" >Service Queue</p>
+    <app-queue-chart [width]="700" [height]="300" [chartName]="'Service Queue'" [data]="queueSimulationService.serviceChartData"/>
+    <p class="bg-blue-600 text-white text-center" >General Queue</p>
     <app-queue-chart [width]="700" [height]="300" [chartName]="'General Queue'" [data]="queueSimulationService.queueChartData"/>
   </div>
 </div>
