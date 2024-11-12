@@ -1,5 +1,6 @@
 import { Injectable } from '@angular/core';
 import { LineData, UTCTimestamp } from 'lightweight-charts';
+import * as PoissonProcess from 'poisson-process'
 
 interface Customer {
   serviceTime: number;
@@ -102,14 +103,18 @@ export class QueueSimulationService {
     console.log('');
     console.log('Starting simulation...');
 
-    // Calculate the percentage of customers arriving in the next minute
-    this.customerProbability = 100 / (this.oneOverLambda * 60);
-
     this.calculateDelay();
 
     const simulateStepWithDelay = (step: number) => {
       if (this.simulationStopped) return;
       console.log('Step', step);
+      if(step % 60 == 0){
+        const customerArriving = Math.round(PoissonProcess.sample(this.lambda));
+        this.customerProbability = 100 * (customerArriving/ 60);
+        console.log('[POISSON] Llegaran', customerArriving, ' clientes en esta hora');
+      }
+
+
       this.simulateStep();
       setTimeout(() => simulateStepWithDelay(step + 1), this.intervalPerStep);
     };
@@ -138,7 +143,7 @@ export class QueueSimulationService {
     }
   }
 
-  private arriveCustomer(): void {
+  private arriveCustomer(): void {;
     let currentCustomerProbability = this.customerProbability;
     let clientsArrived = 0;
     while (currentCustomerProbability > 0) {
