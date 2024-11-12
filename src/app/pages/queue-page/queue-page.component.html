@@ -1,10 +1,26 @@
 <div #canvasContainer class="w-dvw h-dvh"></div>
 
-<app-queue-chart [width]="700" [height]="250" [chartName]="'Service Queue'" [data]="queueSimulationService.serviceChartData"
-                 class="absolute top-0 right-0 z-20" />
-<app-queue-chart [width]="700" [height]="250" [chartName]="'General Queue'" [data]="queueSimulationService.queueChartData"
-                 class="absolute bottom-0 right-0 z-20" />
-
+<div
+  [ngClass]="
+    isChartPanelVisible ? 'graphic-panel-show' : 'graphic-panel-hide'
+  "
+  class="fixed flex top-0 right-0 text-white z-20"
+>
+  <button
+    (click)="toggleChartPanel()"
+    class="bg-blue-600 text-white z-20 w-10 h-auto h-52 py-3 rounded-l-xl"
+  >
+    <p class="rotate-[270deg] text-nowrap -mx-20">
+      {{ isChartPanelVisible ? 'Hide' : 'Show' }} Model Graphics
+    </p>
+  </button>
+  <div class="flex flex-col">
+    <p class="bg-blue-600 text-white text-center" >General Queue</p>
+    <app-queue-chart [width]="700" [height]="300" [chartName]="'Service Queue'" [data]="queueSimulationService.serviceChartData"/>
+    <p class="bg-blue-600 text-white text-center" >Service Queue</p>
+    <app-queue-chart [width]="700" [height]="300" [chartName]="'General Queue'" [data]="queueSimulationService.queueChartData"/>
+  </div>
+</div>
 <!-- Simulation Panel -->
 <div
   [ngClass]="

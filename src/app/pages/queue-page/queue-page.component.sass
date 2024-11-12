@@ -3,6 +3,14 @@
   transition: $property $duration $timing
 
 // Panel styles
+.graphic-panel-show
+  transform: translateX(0%)
+  @include transition(transform, 0.3s, ease-in-out)
+
+.graphic-panel-hide
+  transform: translateX(95%)
+  @include transition(transform, 0.3s, ease-in-out)
+
 .control-panel-show
   transform: translateX(0%)
   @include transition(transform, 0.3s, ease-in-out)

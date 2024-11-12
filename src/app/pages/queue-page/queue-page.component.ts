@@ -30,6 +30,7 @@ export class QueuePageComponent implements OnInit, OnDestroy {
   @ViewChild('canvasContainer', { static: true }) canvasContainer!: ElementRef;
   isControlPanelVisible = false;
   isSimulationPanelVisible = false;
+  isChartPanelVisible = true;
 
   constructor(
     public threeService: ThreeService,
@@ -52,6 +53,10 @@ export class QueuePageComponent implements OnInit, OnDestroy {
 
   toggleControlPanel() {
     this.isControlPanelVisible = !this.isControlPanelVisible;
+  }
+
+  toggleChartPanel() {
+    this.isChartPanelVisible = !this.isChartPanelVisible;
   }
 
   onSimulationParamsChange(): void {
